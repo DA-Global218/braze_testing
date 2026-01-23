@@ -7,7 +7,7 @@
     <style>
       :root {
         --primary: #000000;
-        --bg: #f2cd00;
+        --bg: #ffffff;
       }
 
       * {
@@ -175,7 +175,7 @@
           // 你的 service worker 文件路径（见下一步）
           serviceWorkerLocation: "/service-worker.js",
           // 如果你打算自己注册 service worker，用 true；如果让 Braze 自动注册，就删掉这一行
-          // manageServiceWorkerExternally: true
+          manageServiceWorkerExternally: true
         });
 
         // 2. 识别用户（External ID）
@@ -213,16 +213,14 @@
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-          // 如果你选择 manageServiceWorkerExternally: true，则需要手动注册 SW：
-          /*
+          // 如果你选择 manageServiceWorkerExternally: true，则需要手动注册 SW： 
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("/service-worker.js").then(function (reg) {
           console.log("Service worker registered", reg);
         }).catch(function (err) {
           console.error("Service worker registration failed:", err);
         });
-      }
-      */
+      } 
 
           var link = document.getElementById("employee-login-link");
           if (!link) return;
@@ -244,4 +242,3 @@
     </script>
   </body>
 </html>
-
