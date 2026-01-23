@@ -7,7 +7,7 @@
     <style>
       :root {
         --primary: #000000;
-        --bg: #f2cd00;
+        --bg: #ffffff;
       }
 
       * {
@@ -183,11 +183,11 @@
           braze.changeUser(qsParentUserId);
         }
 
+        braze.logCustomEvent("web_playground_loaded_general");
         // 3. 启用 IAM（包括你配置的 push primer IAM）
         braze.automaticallyShowInAppMessages();
         braze.openSession();
 
-        braze.logCustomEvent("web_playground_loaded_general");
 
         // 4. 子页面返回时的事件
         if (fromEmployeeLogin === "1") {
@@ -244,4 +244,3 @@
     </script>
   </body>
 </html>
-
