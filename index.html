@@ -276,17 +276,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-          // 如果你选择 manageServiceWorkerExternally: true，则需要手动注册 SW：
-          if ("serviceWorker" in navigator) {
-            navigator.serviceWorker
-              .register("/service-worker.js")
-              .then(function (reg) {
-                console.log("Service worker registered", reg);
-              })
-              .catch(function (err) {
-                console.error("Service worker registration failed:", err);
-              });
-          }
+
 
           var link = document.getElementById("employee-login-link");
           if (!link) return;
@@ -308,3 +298,4 @@
     </script>
   </body>
 </html>
+
