@@ -155,9 +155,11 @@
     <footer>&copy; Digital Alchemy. Powered by Braze Landing Pages.</footer>
 
     <!-- Braze Web SDK 集成 + 从子页面返回后触发 IAM 的逻辑 -->
-    <script src="https://js.appboycdn.com/web-sdk/5.4/braze.min.js"></script>
+    <script src="https://js.appboycdn.com/web-sdk/5.4/braze.min.js"></script> 
     <script>
       (function () {
+        const FLAG_ID = "behavior_product_feature"; // 这里填你在 Braze 中配置的 Feature Flag ID
+
         function getQueryParam(name) {
           var params = new URLSearchParams(window.location.search);
           return params.get(name);
@@ -166,32 +168,91 @@
         var qsParentUserId = getQueryParam("parent_user_id");
         var fromEmployeeLogin = getQueryParam("from_employee_login");
 
-        // 1. 初始化 Braze Web SDK（这里加上 Web Push 配置）
+        // 1. 初始化 Braze Web SDK
         braze.initialize("49f1ee81-af3e-4afc-8158-0f4192fed5eb", {
           baseUrl: "sdk.fra-02.braze.eu",
           enableLogging: true,
           allowUserSuppliedJavascript: false,
+          serviceWorkerLocation:
+            "https://da-global218.github.io/braze_testing/service-worker.js",
 
-          // 你的 service worker 文件路径（见下一步）
-          serviceWorkerLocation: "https://da-global218.github.io/braze_testing/service-worker.js",
-          // 如果你打算自己注册 service worker，用 true；如果让 Braze 自动注册，就删掉这一行
+																								 
+																																																																				
+																																																																				   
           manageServiceWorkerExternally: true
         });
 
-        // 2. 识别用户（External ID）
+        // 2. 识别用户
         if (qsParentUserId) {
           braze.changeUser(qsParentUserId);
         }
 
         braze.logCustomEvent("web_playground_loaded_general");
-        // 3. 启用 IAM（包括你配置的 push primer IAM）
+
         braze.automaticallyShowInAppMessages();
         braze.openSession();
 
-// 打开标准 Content Cards 侧边栏
-braze.showContentCards();
+        // 打开 Content Cards
+        braze.showContentCards();
 
-        // 4. 子页面返回时的事件
+        // ===== 新增：把 Feature Flag 应用到页面 UI 的函数 =====
+        function applyFeatureFlagToUI() {
+          var btn = document.getElementById("employee-login-link");
+          if (!btn) return;
+
+          var featureFlag = braze.getFeatureFlag(FLAG_ID);
+
+          // 没有拿到 Flag（比如还没刷新好），就用默认文案
+          if (!featureFlag) {
+            btn.style.display = "inline-flex";
+            var span = btn.querySelector("span");
+            if (span) span.textContent = "Secure access";
+            return;
+          }
+
+          // 记录一次 impression（当前 session 中用户有机会看到这个功能）
+          braze.logFeatureFlagImpression(FLAG_ID);
+
+          if (featureFlag.enabled) {
+            // Flag 开启时的体验：修改按钮副标题
+            btn.style.display = "inline-flex";
+            var spanOn = btn.querySelector("span");
+            if (spanOn) spanOn.textContent = "New experience";
+            console.log("Feature flag enabled:", FLAG_ID);
+          } else {
+            // Flag 关闭时的体验：恢复默认文案
+            btn.style.display = "inline-flex";
+            var spanOff = btn.querySelector("span");
+            if (spanOff) spanOff.textContent = "Secure access";
+            console.log("Feature flag disabled:", FLAG_ID);
+          }
+        }
+
+        // 监听 Feature Flags 更新，更新 UI
+        braze.subscribeToFeatureFlagsUpdates(function () {
+          console.log("Feature flags updated");
+          applyFeatureFlagToUI();
+        });
+
+        // 主动刷新一次 Feature Flags，拿到最新值后更新 UI
+        if (braze.refreshFeatureFlags) {
+          braze.refreshFeatureFlags(
+            function () {
+              console.log("Feature flags refreshed");
+              applyFeatureFlagToUI();
+            },
+            function () {
+              console.warn("Failed to refresh feature flags");
+              applyFeatureFlagToUI(); // 即便失败也用默认状态渲染
+            },
+          );
+        } else {
+          // 如果 SDK 版本不支持 refreshFeatureFlags，就先直接尝试渲染
+          applyFeatureFlagToUI();
+        }
+        // ===== 新增部分结束 =====
+
+        // 3. 子页面返回时的事件
         if (fromEmployeeLogin === "1") {
           braze.logCustomEvent("employee_login_returned_from_child", {
             parent_user_id: qsParentUserId || null,
@@ -207,7 +268,7 @@ braze.showContentCards();
           );
         }
 
-        // 5. Employee Login 入口逻辑
+        // 4. Employee Login 入口逻辑
         function generateParentUserId() {
           return (
             "emp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10)
@@ -215,14 +276,17 @@ braze.showContentCards();
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-          // 如果你选择 manageServiceWorkerExternally: true，则需要手动注册 SW： 
-      //if ("serviceWorker" in navigator) {
-        //navigator.serviceWorker.register("/service-worker.js").then(function (reg) {
-          //console.log("Service worker registered", reg);
-        //}).catch(function (err) {
-          //console.error("Service worker registration failed:", err);
-        //});
-      //} 
+          // 如果你选择 manageServiceWorkerExternally: true，则需要手动注册 SW：
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker
+              .register("/service-worker.js")
+              .then(function (reg) {
+                console.log("Service worker registered", reg);
+              })
+              .catch(function (err) {
+                console.error("Service worker registration failed:", err);
+              });
+          }
 
           var link = document.getElementById("employee-login-link");
           if (!link) return;
@@ -244,5 +308,3 @@ braze.showContentCards();
     </script>
   </body>
 </html>
-
-
