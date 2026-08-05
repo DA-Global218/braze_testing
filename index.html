@@ -176,12 +176,15 @@
           serviceWorkerLocation:
             "https://da-global218.github.io/braze_testing/service-worker.js",
 
-																								 
+		
+        																					 
 																																																																				
 																																																																				   
           manageServiceWorkerExternally: true
         });
 
+		  braze.openSession();	
+		  
         // 2. 识别用户
         if (qsParentUserId) {
           braze.changeUser(qsParentUserId);
@@ -190,7 +193,6 @@
         braze.logCustomEvent("web_playground_loaded_general");
 
         braze.automaticallyShowInAppMessages();
-        braze.openSession();
 
         // 打开 Content Cards
         braze.showContentCards();
